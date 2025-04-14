@@ -8,6 +8,7 @@ import { notFound, errorHandler } from './middlewares/errorMiddlewares.js';
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import ExpressMongoSanitize from "express-mongo-sanitize";
+import mongoSanitize from './utils/sanitize.js';
 
 const app = express()
 const port = 3000
@@ -16,11 +17,22 @@ dotenv.config()
 
 // middlewares
 // gunakan json untuk melakukan req dan res
+app.use(express.urlencoded({extended : true}))
 app.use(express.json())
 app.use(helmet())
-app.use(ExpressMongoSanitize())
+app.use(mongoSanitize); // Use the custom middleware
+// ERROR : TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+// app.use(ExpressMongoSanitize())
+// app.use(
+//   ExpressMongoSanitize({
+//     allowDots: true,
+//     replaceWith: '_',
+//   }),
+// );
+
 app.use(cookieParser())
-app.use(express.urlencoded({extended : true}))
+
+
 // jadi ini supaya folder public bisa diakses oleh browser
 // ini cara mengaksesnya : http://localhost:3000/uploads/image-1744253953241.png
 app.use(express.static('./public'))
@@ -28,6 +40,7 @@ app.use(express.static('./public'))
 mongoose.connect(process.env.DATABASE, {}).then(() => {
     console.log("Connected to MongoDB")
 })
+
 // Parent Router
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/product', productRouter)
